@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трекер времени</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Трекер времени</h1>
+            <p>Управляйте своим временем эффективно</p>
+        </header>
+        
+        <div class="main-content">
+            <!-- Секция активного таймера -->
+            <div class="active-timer-section">
+                <h2>Текущая задача</h2>
+                <div class="timer-display">
+                    <span id="timer">00:00:00</span>
+                </div>
+                <div class="timer-controls">
+                    <input type="text" id="taskName" placeholder="Название задачи...">
+                    <select id="projectSelect">
+                        <option value="">Выберите проект</option>
+                        <option value="work">Работа</option>
+                        <option value="study">Учёба</option>
+                        <option value="personal">Личное</option>
+                    </select>
+                    <button id="startTimer" onclick="startTimer()">Старт</button>
+                    <button id="stopTimer" onclick="stopTimer()" disabled>Стоп</button>
+                </div>
+            </div>
+
+            <!-- Секция добавления записей вручную -->
+            <div class="manual-entry-section">
+                <h2>Добавить запись вручную</h2>
+                <div class="manual-form">
+                    <input type="text" id="manualTaskName" placeholder="Описание задачи...">
+                    <select id="manualProjectSelect">
+                        <option value="">Выберите проект</option>
+                        <option value="work">Работа</option>
+                        <option value="study">Учёба</option>
+                        <option value="personal">Личное</option>
+                    </select>
+                    <input type="datetime-local" id="startTime">
+                    <input type="datetime-local" id="endTime">
+                    <button onclick="addManualEntry()">Добавить запись</button>
+                </div>
+            </div>
+
+            <!-- Секция списка записей -->
+            <div class="records-section">
+                <h2>История записей</h2>
+                <div class="filters">
+                    <input type="text" id="searchInput" placeholder="Поиск по описанию...">
+                    <select id="filterProject">
+                        <option value="">Все проекты</option>
+                        <option value="work">Работа</option>
+                        <option value="study">Учёба</option>
+                        <option value="personal">Личное</option>
+                    </select>
+                    <button onclick="applyFilters()">Применить фильтры</button>
+                </div>
+                <ul id="timeRecordsList"></ul>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
