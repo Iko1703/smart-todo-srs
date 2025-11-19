@@ -51,50 +51,59 @@
             </div>
 
             <!-- Секция списка записей -->
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="searchInput">Поиск по задачам</label>
-                    <input type="text" id="searchInput" placeholder="Введите название задачи...">
+            <div class="records-section">
+                <h2>История записей</h2>
+                
+                <!-- Фильтры -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="searchInput">Поиск по задачам</label>
+                        <input type="text" id="searchInput" placeholder="Введите название задачи...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="filterProject">Проект</label>
+                        <select id="filterProject">
+                            <option value="">Все проекты</option>
+                            <option value="work">Работа</option>
+                            <option value="study">Учёба</option>
+                            <option value="personal">Личное</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="dateFrom">Дата с</label>
+                        <input type="date" id="dateFrom">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="dateTo">Дата по</label>
+                        <input type="date" id="dateTo">
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button onclick="resetFilters()" style="background-color: #95a5a6;">Сбросить</button>
+                    </div>
                 </div>
                 
-                <div class="filter-group">
-                    <label for="filterProject">Проект</label>
-                    <select id="filterProject">
-                        <option value="">Все проекты</option>
-                        <option value="work">Работа</option>
-                        <option value="study">Учёба</option>
-                        <option value="personal">Личное</option>
-                    </select>
+                <!-- Статистика -->
+                <div class="stats-panel" id="statsPanel" style="display: none;">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statRecords">0</div>
+                        <div class="stat-label">записей</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statTotalTime">00:00:00</div>
+                        <div class="stat-label">общее время</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statProjects">0</div>
+                        <div class="stat-label">проектов</div>
+                    </div>
                 </div>
-                
-                <div class="filter-group">
-                    <label for="dateFrom">Дата с</label>
-                    <input type="date" id="dateFrom">
-                </div>
-                
-                <div class="filter-group">
-                    <label for="dateTo">Дата по</label>
-                    <input type="date" id="dateTo">
-                </div>
-                
-                <div class="filter-actions">
-                    <button onclick="resetFilters()" style="background-color: #95a5a6;">Сбросить</button>
-                </div>
-            </div>
-            
-            <div class="stats-panel" id="statsPanel" style="display: none;">
-                <div class="stat-item">
-                    <div class="stat-value" id="statRecords">0</div>
-                    <div class="stat-label">записей</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="statTotalTime">00:00:00</div>
-                    <div class="stat-label">общее время</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="statProjects">0</div>
-                    <div class="stat-label">проектов</div>
-                </div>
+
+                <!-- Список записей -->
+                <ul id="timeRecordsList"></ul>
             </div>
         </div>
     </div>
