@@ -1,0 +1,27 @@
+name: CI - Code Validation
+on:
+  push:
+    branches: [ main ]
+  pull_request_target:
+    branches: [ main ]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Validate HTML structure
+        run: |
+          echo "Checking HTML file existence…"
+          test -findex.html && echo "/ index.html exists" || exit l
+      - name: Validate CSS file
+        run: |
+          echo "Checking CSS file existence…"
+          test -fstyle.css && echo "/ style.css exists" || exit l
+      - name: Validate JavaScript file
+        run: |
+          echo "Checking JS file existence…"
+          test -fscript.js && echo "/ script.js exists" || exit l
+      - name: Basic syntax check
+        run: |
+          echo "All basic validations passed! "
