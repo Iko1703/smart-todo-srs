@@ -1,3 +1,4 @@
+//тест workflow/ci
 // Глобальные переменные
 let timerInterval;
 let seconds = 0;
