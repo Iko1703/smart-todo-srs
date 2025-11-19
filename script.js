@@ -4,11 +4,18 @@ let seconds = 0;
 let isTimerRunning = false;
 let currentSession = null;
 let timeRecords = JSON.parse(localStorage.getItem('timeRecords')) || [];
+let currentFilters = {
+    search: '',
+    project: '',
+    dateFrom: '',
+    dateTo: ''
+};
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     updateTimeRecordsList();
     setDateTimeInputs();
+    initializeFilterElements();
 });
 
 // Установка текущего времени в поля ввода
@@ -201,10 +208,238 @@ function getProjectName(projectKey) {
     return projects[projectKey] || projectKey;
 }
 
+// Инициализация элементов фильтрации
+function initializeFilterElements() {
+    const searchInput = document.getElementById('searchInput');
+    const filterProject = document.getElementById('filterProject');
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    
+    // Установка значений по умолчанию для дат (последние 7 дней)
+    const today = new Date();
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    dateFrom.value = formatDateForInput(weekAgo);
+    dateTo.value = formatDateForInput(today);
+    
+    currentFilters.dateFrom = dateFrom.value;
+    currentFilters.dateTo = dateTo.value;
+    
+    // Обработчики событий для реального поиска
+    searchInput.addEventListener('input', function(e) {
+        currentFilters.search = e.target.value.toLowerCase();
+        applyFilters();
+    });
+    
+    filterProject.addEventListener('change', function(e) {
+        currentFilters.project = e.target.value;
+        applyFilters();
+    });
+    
+    dateFrom.addEventListener('change', function(e) {
+        currentFilters.dateFrom = e.target.value;
+        applyFilters();
+    });
+    
+    dateTo.addEventListener('change', function(e) {
+        currentFilters.dateTo = e.target.value;
+        applyFilters();
+    });
+}
+
+// Форматирование даты для input[type=date]
+function formatDateForInput(date) {
+    return date.toISOString().split('T')[0];
+}
+
 // Применение фильтров
 function applyFilters() {
-    // Базовая реализация - в будущем можно расширить
-    updateTimeRecordsList();
+    const filteredRecords = timeRecords.filter(record => {
+        // Фильтр по поисковому запросу
+        if (currentFilters.search) {
+            const taskName = record.taskName.toLowerCase();
+            if (!taskName.includes(currentFilters.search)) {
+                return false;
+            }
+        }
+        
+        // Фильтр по проекту
+        if (currentFilters.project && record.project !== currentFilters.project) {
+            return false;
+        }
+        
+        // Фильтр по дате
+        const recordDate = new Date(record.startTime).toISOString().split('T')[0];
+        
+        if (currentFilters.dateFrom && recordDate < currentFilters.dateFrom) {
+            return false;
+        }
+        
+        if (currentFilters.dateTo && recordDate > currentFilters.dateTo) {
+            return false;
+        }
+        
+        return true;
+    });
+    
+    updateTimeRecordsList(filteredRecords);
+}
+
+// Обновление списка записей с учетом фильтров
+function updateTimeRecordsList(recordsToShow = null) {
+    const recordsList = document.getElementById('timeRecordsList');
+    recordsList.innerHTML = '';
+    
+    const records = recordsToShow || timeRecords;
+    
+    if (records.length === 0) {
+        recordsList.innerHTML = '<li class="no-records">Записей не найдено</li>';
+        return;
+    }
+    
+    // Сортировка по дате (новые сверху)
+    const sortedRecords = [...records].sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+    
+    // Группировка по датам
+    const groupedRecords = groupRecordsByDate(sortedRecords);
+    
+    Object.keys(groupedRecords).forEach(date => {
+        // Заголовок даты
+        const dateHeader = document.createElement('li');
+        dateHeader.className = 'date-header';
+        dateHeader.innerHTML = `<strong>${formatDisplayDate(date)}</strong>`;
+        recordsList.appendChild(dateHeader);
+        
+        // Записи для этой даты
+        groupedRecords[date].forEach((record, index) => {
+            const li = document.createElement('li');
+            li.className = 'record-item';
+            
+            const startTime = new Date(record.startTime).toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const duration = formatTime(record.duration);
+            
+            li.innerHTML = `
+                <div class="record-info">
+                    <div class="record-main">
+                        <strong>${record.taskName}</strong>
+                        <span class="record-project project-${record.project}">${getProjectName(record.project)}</span>
+                    </div>
+                    <div class="record-details">
+                        <span class="record-time">${startTime}</span>
+                        <span class="record-duration">${duration}</span>
+                    </div>
+                </div>
+                <div class="record-actions">
+                    <button onclick="editRecord(${timeRecords.indexOf(record)})" title="Редактировать">✏️</button>
+                    <button onclick="deleteRecord(${timeRecords.indexOf(record)})" title="Удалить">🗑️</button>
+                </div>
+            `;
+            
+            recordsList.appendChild(li);
+        });
+    });
+}
+
+// Группировка записей по датам
+function groupRecordsByDate(records) {
+    return records.reduce((groups, record) => {
+        const date = new Date(record.startTime).toISOString().split('T')[0];
+        if (!groups[date]) {
+            groups[date] = [];
+        }
+        groups[date].push(record);
+        return groups;
+    }, {});
+}
+
+// Форматирование даты для отображения
+function formatDisplayDate(dateString) {
+    const date = new Date(dateString);
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    if (dateString === today) {
+        return 'Сегодня';
+    } else if (dateString === yesterday) {
+        return 'Вчера';
+    } else {
+        return date.toLocaleDateString('ru-RU', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+}
+
+// Сброс фильтров
+function resetFilters() {
+    currentFilters = {
+        search: '',
+        project: '',
+        dateFrom: document.getElementById('dateFrom').value,
+        dateTo: document.getElementById('dateTo').value
+    };
+    
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterProject').value = '';
+    
+    applyFilters();
+}
+
+// Получение статистики по отфильтрованным записям
+function getFilteredStats() {
+    const filteredRecords = getFilteredRecords();
+    const totalTime = filteredRecords.reduce((sum, record) => sum + record.duration, 0);
+    const projectStats = {};
+    
+    filteredRecords.forEach(record => {
+        if (!projectStats[record.project]) {
+            projectStats[record.project] = {
+                time: 0,
+                count: 0
+            };
+        }
+        projectStats[record.project].time += record.duration;
+        projectStats[record.project].count++;
+    });
+    
+    return {
+        totalRecords: filteredRecords.length,
+        totalTime: totalTime,
+        projectStats: projectStats
+    };
+}
+
+// Получение отфильтрованных записей
+function getFilteredRecords() {
+    return timeRecords.filter(record => {
+        if (currentFilters.search) {
+            const taskName = record.taskName.toLowerCase();
+            if (!taskName.includes(currentFilters.search)) {
+                return false;
+            }
+        }
+        
+        if (currentFilters.project && record.project !== currentFilters.project) {
+            return false;
+        }
+        
+        const recordDate = new Date(record.startTime).toISOString().split('T')[0];
+        
+        if (currentFilters.dateFrom && recordDate < currentFilters.dateFrom) {
+            return false;
+        }
+        
+        if (currentFilters.dateTo && recordDate > currentFilters.dateTo) {
+            return false;
+        }
+        
+        return true;
+    });
 }
 
 // Удаление записи

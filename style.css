@@ -179,3 +179,158 @@ button:disabled {
         font-size: 2em;
     }
 }
+/* Стили для фильтров */
+.filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-size: 0.8em;
+    color: #666;
+    font-weight: bold;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+}
+
+#searchInput {
+    min-width: 200px;
+}
+
+.stats-panel {
+    background: #e8f4fd;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.stat-label {
+    font-size: 0.8em;
+    color: #7f8c8d;
+}
+
+/* Стили для группировки по датам */
+.date-header {
+    background: #2c3e50;
+    color: white;
+    padding: 10px 15px;
+    margin: 20px 0 10px 0;
+    border-radius: 5px;
+    font-size: 1.1em;
+}
+
+.no-records {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.record-item {
+    background: #f8f9fa;
+    margin-bottom: 8px;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #3498db;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.record-item:hover {
+    background: #e9ecef;
+}
+
+.record-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.record-details {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.record-time {
+    font-family: 'Courier New', monospace;
+}
+
+.record-duration {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.record-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.record-actions button {
+    padding: 5px 10px;
+    background: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.record-actions button:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .stats-panel {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .record-item {
+        flex-direction: column;
+        align-items: start;
+        gap: 10px;
+    }
+    
+    .record-actions {
+        align-self: end;
+    }
+}
