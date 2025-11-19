@@ -3,6 +3,8 @@ let timerInterval;
 let seconds = 0;
 let isTimerRunning = false;
 let currentSession = null;
+let editingIndex = null;
+let editModal = null;
 let timeRecords = JSON.parse(localStorage.getItem('timeRecords')) || [];
 let currentFilters = {
     search: '',
@@ -442,18 +444,224 @@ function getFilteredRecords() {
     });
 }
 
-// Удаление записи
-function deleteRecord(index) {
+function editRecord(index) {
+    editingIndex = index;
+    const record = timeRecords[index];
+    
+    createEditModal(record);
+    showEditModal(record);
+}
+
+// Создание модального окна редактирования
+function createEditModal(record) {
+    if (editModal) {
+        editModal.remove();
+    }
+    
+    editModal = document.createElement('div');
+    editModal.className = 'modal-overlay';
+    editModal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Редактирование записи</h3>
+                <button class="close-modal" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editTaskName">Название задачи:</label>
+                    <input type="text" id="editTaskName" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProject">Проект:</label>
+                    <select id="editProject" class="form-select">
+                        <option value="work">Работа</option>
+                        <option value="study">Учёба</option>
+                        <option value="personal">Личное</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editStartTime">Начало:</label>
+                    <input type="datetime-local" id="editStartTime" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editEndTime">Окончание:</label>
+                    <input type="datetime-local" id="editEndTime" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label>Длительность:</label>
+                    <div id="editDuration" class="duration-display">00:00:00</div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeEditModal()">Отмена</button>
+                    <button type="button" class="btn-danger" onclick="deleteRecord(editingIndex, true)">Удалить</button>
+                    <button type="button" class="btn-primary" onclick="saveEditedRecord()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(editModal);
+    
+    // Обработчики для автоматического пересчета длительности
+    document.getElementById('editStartTime').addEventListener('change', updateEditDuration);
+    document.getElementById('editEndTime').addEventListener('change', updateEditDuration);
+}
+
+// Показ модального окна с данными записи
+function showEditModal(record) {
+    const startTime = new Date(record.startTime);
+    const endTime = new Date(record.endTime);
+    
+    document.getElementById('editTaskName').value = record.taskName;
+    document.getElementById('editProject').value = record.project;
+    document.getElementById('editStartTime').value = formatDateTimeForInput(startTime);
+    document.getElementById('editEndTime').value = formatDateTimeForInput(endTime);
+    
+    updateEditDuration();
+    editModal.style.display = 'flex';
+}
+
+// Закрытие модального окна
+function closeEditModal() {
+    if (editModal) {
+        editModal.style.display = 'none';
+        editingIndex = null;
+    }
+}
+
+// Обновление отображения длительности при редактировании
+function updateEditDuration() {
+    const startTime = document.getElementById('editStartTime').value;
+    const endTime = document.getElementById('editEndTime').value;
+    
+    if (startTime && endTime) {
+        const start = new Date(startTime);
+        const end = new Date(endTime);
+        
+        if (end > start) {
+            const duration = Math.floor((end - start) / 1000);
+            document.getElementById('editDuration').textContent = formatTime(duration);
+        } else {
+            document.getElementById('editDuration').textContent = '00:00:00';
+        }
+    }
+}
+
+// Сохранение отредактированной записи
+function saveEditedRecord() {
+    const taskName = document.getElementById('editTaskName').value.trim();
+    const project = document.getElementById('editProject').value;
+    const startTime = document.getElementById('editStartTime').value;
+    const endTime = document.getElementById('editEndTime').value;
+    
+    // Валидация
+    if (!taskName) {
+        showAlert('Введите название задачи', 'error');
+        return;
+    }
+    
+    if (!project) {
+        showAlert('Выберите проект', 'error');
+        return;
+    }
+    
+    if (!startTime || !endTime) {
+        showAlert('Заполните время начала и окончания', 'error');
+        return;
+    }
+    
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    
+    if (end <= start) {
+        showAlert('Время окончания должно быть позже времени начала', 'error');
+        return;
+    }
+    
+    const duration = Math.floor((end - start) / 1000);
+    
+    // Обновление записи
+    timeRecords[editingIndex] = {
+        taskName: taskName,
+        project: project,
+        startTime: start,
+        endTime: end,
+        duration: duration
+    };
+    
+    saveToLocalStorage();
+    updateTimeRecordsList();
+    closeEditModal();
+    
+    showAlert('Запись успешно обновлена', 'success');
+}
+
+// Улучшенная функция удаления с поддержкой вызова из модального окна
+function deleteRecord(index, fromModal = false) {
     if (confirm('Вы уверены, что хотите удалить эту запись?')) {
         timeRecords.splice(index, 1);
         saveToLocalStorage();
         updateTimeRecordsList();
+        
+        if (fromModal) {
+            closeEditModal();
+        }
+        
+        showAlert('Запись удалена', 'success');
     }
 }
 
-// Редактирование записи (заглушка)
-function editRecord(index) {
-    alert('Функция редактирования будет реализована в следующих версиях');
+// Функция для показа уведомлений
+function showAlert(message, type = 'info') {
+    // Удаляем предыдущие уведомления
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.textContent = message;
+    
+    document.body.appendChild(alert);
+    
+    // Показываем уведомление
+    setTimeout(() => {
+        alert.classList.add('show');
+    }, 100);
+    
+    // Автоматическое скрытие через 3 секунды
+    setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Быстрое редактирование длительности (удобная функция)
+function quickEditDuration(index, changeMinutes) {
+    const record = timeRecords[index];
+    const newEndTime = new Date(record.endTime.getTime() + changeMinutes * 60 * 1000);
+    
+    if (newEndTime <= record.startTime) {
+        showAlert('Время окончания не может быть раньше начала', 'error');
+        return;
+    }
+    
+    record.endTime = newEndTime;
+    record.duration = Math.floor((newEndTime - record.startTime) / 1000);
+    
+    saveToLocalStorage();
+    updateTimeRecordsList();
+    showAlert(`Время изменено на ${changeMinutes > 0 ? '+' : ''}${changeMinutes} мин`, 'success');
 }
 
 // Сохранение в localStorage
