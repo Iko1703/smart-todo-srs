@@ -1,0 +1,17 @@
+@startuml seq_export_report
+actor "Пользователь" as User
+participant "UI" as UI
+participant "Backend" as Server
+database "DB" as DB
+participant "Exporter" as Exporter
+
+User -> UI : Запросить экспорт (from,to,format,filters)
+UI -> Server : GET /api/reports/export?from=...&to=...&format=csv
+activate Server
+Server -> DB : SELECT records WHERE filters
+DB --> Server : rows
+Server -> Exporter : format(rows, csv)
+Exporter --> Server : file (binary) / url
+Server --> UI : 200 {download_link}
+deactivate Server
+@enduml
