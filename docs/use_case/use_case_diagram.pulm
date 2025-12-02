@@ -1,0 +1,28 @@
+@startuml usecase_tracker
+left to right direction
+actor "Пользователь" as User
+actor "Администратор" as Admin
+
+rectangle "Трекер времени" {
+  usecase "Запуск/Остановка таймера" as UC_Timer
+  usecase "Добавить запись вручную" as UC_Manual
+  usecase "Просмотр/Редактирование записей" as UC_CRUD
+  usecase "Фильтрация/Поиск/Сортировка" as UC_Filter
+  usecase "Управление проектами/категориями" as UC_ProjectCat
+  usecase "Просмотр статистики и диаграмм" as UC_Stats
+  usecase "Экспорт отчётов (CSV/JSON)" as UC_Export
+  usecase "Настройки (язык/тема/уведомления)" as UC_Settings
+}
+
+User -- UC_Timer
+User -- UC_Manual
+User -- UC_CRUD
+User -- UC_Filter
+User -- UC_ProjectCat
+User -- UC_Stats
+User -- UC_Export
+User -- UC_Settings
+
+Admin ..> UC_ProjectCat : <<extend>>
+Admin ..> UC_Settings : <<include>>
+@enduml
