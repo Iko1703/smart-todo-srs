@@ -1,0 +1,25 @@
+@startuml seq_start_stop
+actor "Пользователь" as User
+participant "UI" as UI
+participant "Backend" as Server
+database "DB" as DB
+participant "NotificationService" as Notify
+
+User -> UI : Нажать Start (taskId)
+UI -> Server : POST /api/sessions/start {taskId}
+activate Server
+Server -> DB : INSERT sessions (user, task, start_ts)
+DB --> Server : session_id
+Server -> Notify : schedule long-session-alert(session_id)
+Server --> UI : 201 {session_id, start_ts}
+deactivate Server
+
+User -> UI : Нажать Stop (session_id)
+UI -> Server : POST /api/sessions/stop {session_id}
+activate Server
+Server -> DB : UPDATE sessions SET end_ts = now() WHERE id = session_id
+Server -> DB : INSERT INTO records (from session) ...
+DB --> Server : OK
+Server --> UI : 200 {duration_seconds, record_id}
+deactivate Server
+@enduml
