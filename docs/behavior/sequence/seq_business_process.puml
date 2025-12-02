@@ -1,0 +1,164 @@
+@startuml seq_business_process
+' Комплексная диаграмма процесса: вход -> таймер/ручная запись -> синхронизация -> экспорт/backup
+actor "Пользователь" as User
+participant "Клиентское UI" as UI
+participant "Auth Service" as Auth
+participant "Backend / API" as Server
+database "БД (Postgres)" as DB
+participant "NotificationService" as Notify
+participant "Exporter" as Exporter
+participant "BackupService" as Backup
+participant "Admin Console" as Admin
+
+== Аутентификация и загрузка состояния ==
+User -> UI : Открыть приложение
+UI -> Auth : Проверить/обновить токен
+alt токен валиден
+  Auth --> UI : 200 {user_info, settings}
+else токен просрочен / нет
+  UI -> Auth : POST /login {credentials}
+  activate Auth
+  Auth -> DB : SELECT user where login=?
+  DB --> Auth : user_row
+  Auth --> UI : 200 {jwt, user_info}
+  deactivate Auth
+end alt
+UI -> Server : GET /api/sync/state?since=lastSync
+activate Server
+Server -> DB : SELECT active_sessions, recent_records, projects, categories
+DB --> Server : rows
+Server --> UI : 200 {state_payload}
+deactivate Server
+UI -> UI : Отобразить активную сессию(и) и записи
+
+== Пользователь выбирает сценарий: запустить таймер ==
+User -> UI : Нажать "Start" (taskId/projectId)
+UI -> Server : POST /api/sessions/start {taskId, projectId}
+activate Server
+Server -> DB : INSERT sessions (user, task, start_ts)
+DB --> Server : session_id
+Server -> Notify : schedule long-session-alert(session_id, threshold=120min)
+Server --> UI : 201 {session_id, start_ts}
+deactivate Server
+
+== Цикл: пользователь может паузить/резюмировать таймер ==
+loop Пока сессия активна
+  alt пользователь нажимает Pause
+    User -> UI : Нажать Pause
+    UI -> Server : POST /api/sessions/pause {session_id}
+    activate Server
+    Server -> DB : UPDATE sessions set paused=true, pause_ts=now()
+    Server --> UI : 200 {paused_at}
+    deactivate Server
+  else пользователь нажимает Resume
+    User -> UI : Нажать Resume
+    UI -> Server : POST /api/sessions/resume {session_id}
+    activate Server
+    Server -> DB : UPDATE sessions set paused=false, resumed_at=now()
+    Server --> UI : 200 {resumed_at}
+    deactivate Server
+  end alt
+end loop
+
+== Оповещение о долгой сессии (параллельно) ==
+par background: check long sessions
+  Notify -> Server : GET /api/sessions/long?threshold=120min
+  Server -> DB : SELECT sessions WHERE (now() - start_ts) > threshold AND notified=false
+  DB --> Server : long_list
+  alt есть долгие сессии
+    Server -> Notify : send push/email for each session
+    Server -> DB : UPDATE sessions set notified=true where id in (...)
+  else пусто
+  end alt
+end par
+
+== Остановка таймера -> создание записи ==
+User -> UI : Нажать Stop (session_id)
+UI -> Server : POST /api/sessions/stop {session_id}
+activate Server
+Server -> DB : UPDATE sessions set end_ts = now() where id = session_id
+Server -> DB : INSERT INTO records from sessions (compute duration)
+DB --> Server : {record_id, duration}
+Server --> UI : 200 {record_id, duration_seconds}
+deactivate Server
+UI -> UI : Добавить запись в локальную ленту
+
+== Ручная запись (опционально) ==
+opt Пользователь создаёт ручную запись
+  User -> UI : Открыть форму "Добавить запись"
+  UI -> Server : POST /api/records {start_ts, end_ts, projectId, categoryId, note}
+  activate Server
+  Server -> DB : INSERT INTO records (...)
+  DB --> Server : record_id
+  Server --> UI : 201 {record_id}
+  deactivate Server
+end opt
+
+== Синхронизация (реальное время или по расписанию) ==
+loop sync every X sec / on change
+  UI -> Server : POST /api/sync/push {local_changes}
+  activate Server
+  Server -> DB : MERGE/UPSERT records, sessions, settings
+  DB --> Server : ok
+  Server -> UI : 200 {server_changes}
+  deactivate Server
+  UI -> UI : Применить серверные изменения (конфликты?)
+  opt конфликт изменений
+    UI -> User : Показать диалог конфликта (keep local / keep server / merge)
+    User -> UI : Выбрать стратегию
+    UI -> Server : POST /api/sync/resolve {resolution}
+  end opt
+end loop
+
+== Экспорт отчёта и скачивание ==
+User -> UI : Запрос Export (from,to,format=csv)
+UI -> Server : GET /api/reports/export?from=...&to=...&format=csv
+activate Server
+Server -> DB : SELECT records WHERE filters
+DB --> Server : rows
+Server -> Exporter : format(rows, csv)
+activate Exporter
+Exporter --> Server : file_url (signed temporary)
+deactivate Exporter
+Server --> UI : 200 {download_link}
+deactivate Server
+UI -> User : Показать ссылку для скачивания
+
+== Резервное копирование (по требованию / по расписанию) ==
+User -> UI : Создать backup (manual) / Cron
+UI -> Server : POST /api/backup/create
+activate Server
+Server -> DB : SELECT all user data
+DB --> Server : dump
+Server -> Backup : store dump to storage (zip/json)
+activate Backup
+Backup --> Server : backup_id, download_url
+deactivate Backup
+Server --> UI : 201 {backup_id, download_url}
+deactivate Server
+
+== Администратор: обзор и восстановление ==
+Admin -> Admin : Открыть Admin Console
+Admin -> Server : GET /api/admin/backups
+activate Server
+Server -> DB : SELECT backups metadata
+DB --> Server : rows
+Server --> Admin : 200 {backups_list}
+deactivate Server
+Admin -> Server : POST /api/admin/restore {backup_id, target_user_id}
+activate Server
+Server -> Backup : fetch backup (zip)
+activate Backup
+Backup --> Server : dump
+deactivate Backup
+Server -> DB : restore dump into DB (transactional)
+DB --> Server : OK
+Server --> Admin : 200 {restore_status}
+deactivate Server
+
+note over Server,DB
+ "Важно: операции backup/restore должны быть транзакционными,
+  с возможностью отката и логгированием."
+end note
+
+@enduml
