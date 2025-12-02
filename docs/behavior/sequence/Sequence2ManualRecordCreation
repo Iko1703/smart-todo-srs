@@ -1,0 +1,14 @@
+@startuml seq_manual_record
+actor "Пользователь" as User
+participant "UI" as UI
+participant "Backend" as Server
+database "DB" as DB
+
+User -> UI : Открыть форму добавления записи
+UI -> Server : POST /api/records {projectId, categoryId, start_ts, end_ts, note}
+activate Server
+Server -> DB : INSERT INTO records (...)
+DB --> Server : record_id
+Server --> UI : 201 {record_id}
+deactivate Server
+@enduml
