@@ -1,0 +1,338 @@
+{
+	"info": {
+		"_postman_id": "bc23609d-df42-4385-8d1c-973e42ad6888",
+		"name": "TimeTracker API",
+		"description": "StartFragmentAPI для трекера времени на основе диаграммыEndFragment",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48149710",
+		"_collection_link": "https://iko1703-8249563.postman.co/workspace/Iko's-Workspace~f25dfe68-3535-43a4-899e-71007667e2ce/collection/48149710-bc23609d-df42-4385-8d1c-973e42ad6888?action=share&source=collection_link&creator=48149710"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", () => {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Save token\", () => {\r",
+									"    const json = pm.response.json();\r",
+									"    pm.environment.set(\"auth_token\", json.token);\r",
+									"    pm.environment.set(\"user_id\", json.user_id);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"alex\",\r\n  \"password\": \"password123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Login",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"username\": \"alex\",\r\n  \"password\": \"password123\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/login",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "",
+									"type": "text"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{\r\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\",\r\n  \"user_id\": 1,\r\n  \"username\": \"alex\"\r\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get All Users",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "",
+									"type": "text"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{\n    \"users\": [\n        {\n            \"user_id\": 1,\n            \"username\": \"alex\",\n            \"email\": \"alex@example.com\",\n            \"created_at\": \"2024-01-15T10:00:00Z\"\n        },\n        {\n            \"user_id\": 2,\n            \"username\": \"maria\",\n            \"email\": \"maria@example.com\",\n            \"created_at\": \"2024-01-15T11:00:00Z\"\n        }\n    ]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Projects",
+			"item": [
+				{
+					"name": "Get All",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get All",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/projects",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"projects"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "",
+									"type": "text"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{\r\n  \"projects\": [\r\n    {\r\n      \"project_id\": 1,\r\n      \"name\": \"Работа\",\r\n      \"color\": \"#e74c3c\",\r\n      \"user_id\": 1\r\n    },\r\n    {\r\n      \"project_id\": 2, \r\n      \"name\": \"Учёба\",\r\n      \"color\": \"#3498db\",\r\n      \"user_id\": 1\r\n    }\r\n  ]\r\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Project",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Новый проект\",\r\n  \"color\": \"#27ae60\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "TimeSessions",
+			"item": [
+				{
+					"name": "Get Time Sessions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/time_sessions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"time_sessions"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get Time Sessions",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/time_sessions",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"time_sessions"
+									]
+								}
+							},
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "",
+									"type": "text"
+								}
+							],
+							"cookie": [
+								{
+									"expires": "Invalid Date",
+									"domain": "",
+									"path": ""
+								}
+							],
+							"body": "{\n    \"sessions\": [\n        {\n            \"session_id\": 1,\n            \"title\": \"Разработка API\",\n            \"start_time\": \"2024-01-16T09:00:00Z\",\n            \"end_time\": \"2024-01-16T12:00:00Z\",\n            \"duration_seconds\": 10800,\n            \"user_id\": 1,\n            \"project_id\": 1\n        }\n    ]\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Tags",
+			"item": []
+		},
+		{
+			"name": "Reports",
+			"item": []
+		},
+		{
+			"name": "Settings",
+			"item": []
+		}
+	]
+}
