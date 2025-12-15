@@ -1,7 +1,7 @@
 @startuml usecase_tracker
 left to right direction
 actor "Пользователь" as User
-actor "Администратор" as Admin
+
 
 rectangle "Трекер времени" {
   usecase "Запуск/Остановка таймера" as UC_Timer
@@ -23,6 +23,3 @@ User -- UC_Stats
 User -- UC_Export
 User -- UC_Settings
 
-Admin ..> UC_ProjectCat : <<extend>>
-Admin ..> UC_Settings : <<include>>
-@enduml
